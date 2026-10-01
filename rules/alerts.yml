@@ -1,0 +1,53 @@
+groups:
+  - name: wordpress-mysql-alerts
+    rules:
+      # WordPress Alerts
+      - alert: WordPressHighCPU
+        expr: rate(container_cpu_usage_seconds_total{container="wordpress"}[5m]) * 100 > 80
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "WordPress CPU cao"
+          description: "CPU usage của WordPress > 80% trong 2 phút"
+
+      - alert: WordPressHighMemory
+        expr: container_memory_usage_bytes{container="wordpress"} / container_spec_memory_limit_bytes{container="wordpress"} * 100 > 85
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "WordPress Memory cao"
+
+      # MySQL Alerts
+      - alert: MySQLTooManyConnections
+        expr: mysql_global_status_threads_connected > 80
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "MySQL có quá nhiều kết nối"
+
+      - alert: MySQLErrorRateHigh
+        expr: rate(mysql_global_status_errors_total[5m]) > 5
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "MySQL có nhiều lỗi"
+
+      # cAdvisor / Host
+      - alert: HighDiskUsage
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) * 100 < 15
+        for: 5m
+        labels:
+          severity: warning
+
+      - alert: TestSlackWebhook
+        expr: up{job="prometheus"} == 1
+        for: 10s
+        labels:
+          severity: critical
+        annotations:
+          summary: "🔔 Test kết nối Slack thành công!"
+          description: "Hệ thống Alertmanager đã thông đường tới Slack. Bạn có thể xóa luật test này đi được rồi."
